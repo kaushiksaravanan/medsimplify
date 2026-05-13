@@ -1,0 +1,23 @@
+[
+  {
+    "input": "Dear Patient, Following your recent appointment on 14/03/2026, I am writing to inform you that your blood test results indicate elevated levels of glycated haemoglobin (HbA1c) at 58 mmol/mol, which is above the recommended threshold of 48 mmol/mol for non-diabetic individuals. This finding is consistent with a diagnosis of Type 2 Diabetes Mellitus. I would recommend commencing Metformin 500mg twice daily with meals, and scheduling a follow-up appointment in 3 months for repeat HbA1c monitoring. Please also arrange a retinal screening appointment and annual foot check.",
+    "language": "English",
+    "output": "[URGENT] \nYou have diabetes.\n \n[INFO] \nYour blood test results:\nHigh sugar levels.\n \n[WARNING] \nHigh sugar is bad.\n \n[MEDICINE] \nTake Metformin 500mg.\nTwice a day with food.\n \n[DATE] \nNext appointment in 3 months.\n \n[INFO] \nYou need:\n* Eye test\n* Foot check\n \n[CLOCK] \nDo it now.\n \nWhat to do:\n* Take Metformin\n* Book eye test\n* Book foot check\n* Go to next appointment",
+    "score": "Reading level significantly reduced (target: Grade 3-4)",
+    "stats": "Words: 86 -> 64"
+  },
+  {
+    "input": "NOTICE OF DETERMINATION: Having considered your application and supporting documentation, we have determined that you are not eligible for Universal Credit payments at this time. The reason for this decision is that your combined household income of 2,847 per month exceeds the applicable threshold for your household composition of 1,248 per month. You have the right to request a Mandatory Reconsideration within one calendar month.",
+    "language": "English",
+    "output": "[CLOCK] One month deadline\n[INFO] We looked at your application\nYou are not eligible now\n[INFO] Your household income is high\n[INFO] It is 2,847 per month\n[INFO] The limit is 1,248 per month\n[WARNING] You are over the limit\nYou can ask us to look again\n[CALL] Call us to ask\nHere are your actions:\n* Ask us to look again\n* Do it within one month\nWhat to do:\n* Call us to ask for a review\n* Do it before one month is over",
+    "score": "Reading level significantly reduced (target: Grade 3-4)",
+    "stats": "Words: 65 -> 87"
+  },
+  {
+    "input": "PRESCRIPTION: Amoxicillin 500mg. Take ONE capsule THREE times a day. Complete the full course even if you feel better. Do not take if allergic to penicillin. If you develop difficulty breathing or swelling, seek immediate medical attention.",
+    "language": "Spanish",
+    "output": "[CLOCK] Take medicine 3 times a day\n[INFO] Medicine is Amoxicillin\n[MEDICINE] Take 1 capsule\n[MEDICINE] 3 times a day\n[INFO] Finish all medicine\n[WARNING] Allergic to penicillin?\n[WARNING] Do not take\n[URGENT] Hard to breathe?\n[URGENT] Swelling?\n[CALL] Get medical help\n[OK] Feel better soon\n\nWhat to do:\n* Take 1 capsule 3 times a day\n* Finish all medicine\n* Tell doctor if allergic\n* Get help if hard to breathe\n\nVersi\u00f3n en espa\u00f1ol:\n[RELOJ] Toma medicina 3 veces al d\u00eda\n[INFO] Medicina es Amoxicilina\n[MEDICINA] Toma 1 c\u00e1psula\n[MEDICINA] 3 veces al d\u00eda\n[INFO] Termina toda la medicina\n[ADVERTENCIA] Alergico a penicilina?\n[ADVERTENCIA] No tomes\n[URGENTE] Dificultad para respirar?\n[URGENTE] Hinchaz\u00f3n?\n[LLAMADA] Busca ayuda m\u00e9dica\n[OK] Te sentir\u00e1s mejor pronto\n\nQu\u00e9 hacer:\n* Toma 1 c\u00e1psula 3 veces al d\u00eda\n* Termina toda la medicina\n* Dile al doctor si eres al\u00e9rgico\n* Busca ayuda si tienes dificultad para respirar",
+    "score": "Reading level significantly reduced (target: Grade 3-4)",
+    "stats": "Words: 37 -> 153"
+  }
+]
