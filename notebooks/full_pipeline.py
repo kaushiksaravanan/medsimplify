@@ -81,7 +81,7 @@ from peft import LoraConfig, get_peft_model, prepare_model_for_kbit_training
 from trl import SFTTrainer
 import torch
 
-MODEL_NAME = "google/gemma-2-2b-it"
+MODEL_NAME = "google/gemma-4-E4B-it"
 MAX_SEQ_LENGTH = 1024
 
 quantization_config = BitsAndBytesConfig(

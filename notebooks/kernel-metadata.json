@@ -7,10 +7,5 @@
   "is_private": true,
   "enable_gpu": true,
   "enable_internet": true,
-  "keywords": [
-    "gemma",
-    "accessibility",
-    "unsloth",
-    "fine-tuning"
-  ]
+  "keywords": []
 }

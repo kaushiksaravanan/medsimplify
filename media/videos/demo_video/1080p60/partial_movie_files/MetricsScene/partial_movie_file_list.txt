@@ -1,0 +1,11 @@
+# This file is used internally by FFMPEG.
+file 'file:C:/Users/I587436/medsimplify/media/videos/demo_video/1080p60/partial_movie_files/MetricsScene/2257293077_3379262274_223132457.mp4'
+file 'file:C:/Users/I587436/medsimplify/media/videos/demo_video/1080p60/partial_movie_files/MetricsScene/2135761390_967650360_3794035439.mp4'
+file 'file:C:/Users/I587436/medsimplify/media/videos/demo_video/1080p60/partial_movie_files/MetricsScene/2135761390_2574473371_2470675439.mp4'
+file 'file:C:/Users/I587436/medsimplify/media/videos/demo_video/1080p60/partial_movie_files/MetricsScene/2135761390_2653501062_2282758054.mp4'
+file 'file:C:/Users/I587436/medsimplify/media/videos/demo_video/1080p60/partial_movie_files/MetricsScene/2135761390_1432596116_141757472.mp4'
+file 'file:C:/Users/I587436/medsimplify/media/videos/demo_video/1080p60/partial_movie_files/MetricsScene/2135761390_1027745436_1401073760.mp4'
+file 'file:C:/Users/I587436/medsimplify/media/videos/demo_video/1080p60/partial_movie_files/MetricsScene/2135761390_1432596116_3498738087.mp4'
+file 'file:C:/Users/I587436/medsimplify/media/videos/demo_video/1080p60/partial_movie_files/MetricsScene/2135761390_482928289_979719362.mp4'
+file 'file:C:/Users/I587436/medsimplify/media/videos/demo_video/1080p60/partial_movie_files/MetricsScene/2135761390_2872842549_2209283012.mp4'
+file 'file:C:/Users/I587436/medsimplify/media/videos/demo_video/1080p60/partial_movie_files/MetricsScene/2135761390_3065202520_1365616913.mp4'
