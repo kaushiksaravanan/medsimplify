@@ -79,7 +79,7 @@ print("\n" + "="*60 + "\nSTEP 2: Fine-tuning\n" + "="*60)
 from unsloth import FastLanguageModel
 import torch
 
-MODEL_NAME = "google/gemma-3-4b-it"
+MODEL_NAME = "google/gemma-2-2b-it"
 MAX_SEQ_LENGTH = 2048
 
 print(f"Loading {MODEL_NAME}...")
