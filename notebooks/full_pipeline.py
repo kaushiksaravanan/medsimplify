@@ -143,10 +143,15 @@ try:
 except Exception as e:
     print(f"GGUF export: {e}")
 
+HF_TOKEN = os.environ.get("HF_TOKEN", "")
+
 try:
-    model.push_to_hub("kaushikss/medsimplify-gemma4", token="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")
-    tokenizer.push_to_hub("kaushikss/medsimplify-gemma4", token="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")
-    print("Pushed to HuggingFace Hub!")
+    if HF_TOKEN:
+        model.push_to_hub("kaushikss/medsimplify-gemma4", token=HF_TOKEN)
+        tokenizer.push_to_hub("kaushikss/medsimplify-gemma4", token=HF_TOKEN)
+        print("Pushed to HuggingFace Hub!")
+    else:
+        print("No HF_TOKEN set - skipping hub push. Export model manually.")
 except Exception as e:
     print(f"Hub push: {e}")
 
