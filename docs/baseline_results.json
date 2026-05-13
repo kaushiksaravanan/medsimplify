@@ -1,0 +1,21 @@
+{
+  "results": [
+    {
+      "orig": 15.242666666666668,
+      "simp": 2.063376623376623,
+      "output": "[INFO] You had a test.\n[DATE] Test was on 14/03/2026.\n[INFO] Test results are back.\n[WARNING] Results are not good.\nYou have high sugar.\nThis is called diabetes.\n[INFO] Diabetes is a health problem.\n[MEDICINE] You need to take a pill.\nPill is called Metformin.\nTake 500mg twice a day.\nTake with food.\n[INFO] Come back in 3 months.\nWe check your sugar again.\n\nActions:\n* Take Metformin pill\n* Take pill with food\n* Come back in 3 months\n* Check sugar levels again\n\nWhat to do:\n* Take your pill twice a day\n* Eat food with your pill\n* Come back to the doctor in 3 months\n* Ask for help if you need it"
+    },
+    {
+      "orig": 15.242666666666668,
+      "simp": 1.014372294372297,
+      "output": "[INFO] We looked at your form.\nWe made a decision.\nYou do not get money.\n[WARNING] You earn too much.\nYou get 2,847 per month.\nThis is too much money.\n[INFO] The limit is 1,248.\nYou can ask us again.\n[CALL] You have one month.\n[DATE] Count from today.\nHere are your actions:\n* Ask us to look again\n* Do it in one month\n* Call us for help\nWhat to do:\n* Ask us to look again at your form\n* Call us if you need help"
+    },
+    {
+      "orig": 7.794545454545453,
+      "simp": 2.155555555555555,
+      "output": "[INFO] We need house.\n[URGENT] Leave by [DATE] 01/08/2026.\n[WARNING] Court comes if you stay.\n[INFO] Get help now.\n[CALL] Ring Citizens Advice.\n[CALL] Ring Shelter.\n[INFO] They help for free.\n[INFO] They give good advice.\n[MEDICINE] Not a doctor issue.\n[CLOCK] Time is running out.\n[OK] You can get help.\n\nWhat to do:\n* Leave house by [DATE] 01/08/2026\n* Ring Citizens Advice for help\n* Ring Shelter for help\n* Get free advice now"
+    }
+  ],
+  "avg_orig": 12.759959595959595,
+  "avg_simp": 1.7444348244348251
+}

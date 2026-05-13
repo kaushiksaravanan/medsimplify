@@ -5,18 +5,17 @@ colorFrom: blue
 colorTo: green
 sdk: gradio
 sdk_version: 4.44.0
+python_version: "3.10"
 app_file: app.py
 pinned: true
 license: apache-2.0
-models:
-  - YOUR_USERNAME/medsimplify-gemma4
 tags:
   - gemma
   - accessibility
   - document-simplification
   - easy-read
   - cognitive-disability
-short_description: "AI Document Accessibility — transforms complex documents into Easy Read format"
+short_description: "Gemma 4 transforms documents into Easy Read format"
 ---
 
 # MedSimplify 📄

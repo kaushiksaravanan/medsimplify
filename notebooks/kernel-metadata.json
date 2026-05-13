@@ -1,0 +1,16 @@
+{
+  "id": "kaushiksarav/medsimplify-gemma4-training",
+  "title": "medsimplify-gemma4-training",
+  "code_file": "full_pipeline.py",
+  "language": "python",
+  "kernel_type": "script",
+  "is_private": true,
+  "enable_gpu": true,
+  "enable_internet": true,
+  "keywords": [
+    "gemma",
+    "accessibility",
+    "unsloth",
+    "fine-tuning"
+  ]
+}

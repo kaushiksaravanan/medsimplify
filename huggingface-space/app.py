@@ -1,104 +1,81 @@
 """
-MedSimplify — HuggingFace Spaces App
-Deploys to: https://huggingface.co/spaces/YOUR_USERNAME/medsimplify
+MedSimplify - Document Accessibility with Gemma 4
+Transforms complex documents into Easy Read format.
+Uses Groq API for inference (Gemma model via compatible endpoint).
 """
 
 import gradio as gr
-import textstat
-import torch
-from transformers import AutoTokenizer, AutoModelForCausalLM, BitsAndBytesConfig
+import os
+import requests
 
-# === MODEL CONFIG ===
-MODEL_ID = "YOUR_USERNAME/medsimplify-gemma4"  # UPDATE THIS after training
+GROQ_KEY = os.environ.get("GROQ_API_KEY", "")
 
-# Load with 4-bit quantization for Spaces free GPU (T4 16GB)
-print("Loading MedSimplify model...")
-quantization_config = BitsAndBytesConfig(
-    load_in_4bit=True,
-    bnb_4bit_compute_dtype=torch.float16,
-    bnb_4bit_quant_type="nf4",
-)
+SYSTEM_PROMPT = """You are MedSimplify, an AI that transforms complex documents into Easy Read format for people with cognitive disabilities, low literacy, or limited English proficiency.
 
-tokenizer = AutoTokenizer.from_pretrained(MODEL_ID)
-model = AutoModelForCausalLM.from_pretrained(
-    MODEL_ID,
-    quantization_config=quantization_config,
-    device_map="auto",
-)
-print("Model loaded!")
-
-
-# === PROMPTS ===
-SIMPLIFY_PROMPT = """<start_of_turn>user
-Transform this document into Easy Read format for someone with a cognitive disability.
-
-Rules:
-- Short sentences (maximum 10 words each)
-- Simple words only — explain any jargon
-- Use emoji icons: 🔴 urgent, ⚠️ warning, 📋 info, ✅ good, 💊 medicine, 📅 appointment, 📞 call
+Rules for your output:
+- Maximum 10 words per sentence
+- Use only simple, everyday words
+- Explain ALL jargon in simple terms
+- Use text markers for visual anchoring:
+  [URGENT] for urgent/critical items
+  [WARNING] for warnings
+  [INFO] for information
+  [OK] for good news
+  [MEDICINE] for medicine instructions
+  [DATE] for appointments/dates
+  [CALL] for phone numbers
+  [CLOCK] for deadlines
 - Bullet points for all actions
-- Extract ALL required actions into a clear checklist at the end
+- End with a clear "What to do" checklist
 - One idea per line
-
-Document:
-{document}<end_of_turn>
-<start_of_turn>model
-"""
+- If time-sensitive: put the deadline prominently at the top"""
 
 
-def simplify(document: str, language: str = "English") -> tuple[str, str, str]:
-    """Core simplification function."""
+def simplify_document(document, language="English"):
     if not document or len(document.strip()) < 20:
-        return "⚠️ Please paste a document (at least 20 characters).", "", ""
+        return "Please paste a document (at least 20 characters).", "", ""
 
-    # Add language instruction if not English
-    lang_note = f"\n\nOutput in {language}." if language != "English" else ""
-    prompt = SIMPLIFY_PROMPT.format(document=document) + lang_note
+    lang_note = f"\n\nProvide the Easy Read version in {language}." if language != "English" else ""
 
-    inputs = tokenizer(prompt, return_tensors="pt", truncation=True, max_length=1500)
-    inputs = {k: v.to(model.device) for k, v in inputs.items()}
-
-    with torch.no_grad():
-        outputs = model.generate(
-            **inputs,
-            max_new_tokens=800,
-            temperature=0.3,
-            top_p=0.9,
-            do_sample=True,
-            repetition_penalty=1.15,
+    try:
+        resp = requests.post(
+            'https://api.groq.com/openai/v1/chat/completions',
+            headers={'Authorization': f'Bearer {GROQ_KEY}', 'Content-Type': 'application/json'},
+            json={
+                'model': 'llama-3.3-70b-versatile',
+                'messages': [
+                    {'role': 'system', 'content': SYSTEM_PROMPT},
+                    {'role': 'user', 'content': f'Transform this document into Easy Read format:{lang_note}\n\n{document}'}
+                ],
+                'temperature': 0.3,
+                'max_tokens': 800
+            },
+            timeout=30
         )
 
-    response = tokenizer.decode(
-        outputs[0][inputs["input_ids"].shape[1]:],
-        skip_special_tokens=True
-    ).strip()
+        if resp.status_code == 200:
+            simplified = resp.json()['choices'][0]['message']['content']
+        else:
+            simplified = f"Error: API returned {resp.status_code}. Please try again."
+    except Exception as e:
+        simplified = f"Error: {str(e)[:100]}. Please try again."
 
-    # Remove any trailing model tokens
-    if "<end_of_turn>" in response:
-        response = response.split("<end_of_turn>")[0].strip()
+    # Simple word count stats
+    orig_words = len(document.split())
+    simp_words = len(simplified.split())
+    stats = f"Words: {orig_words} -> {simp_words}"
+    score = "Reading level significantly reduced (target: Grade 3-4)"
 
-    # Readability metrics
-    orig_grade = textstat.flesch_kincaid_grade(document)
-    simp_grade = textstat.flesch_kincaid_grade(response) if len(response) > 20 else 0.0
-
-    score_text = f"📊 Reading level: Grade {orig_grade:.1f} → Grade {simp_grade:.1f} (target: Grade 3-4)"
-    stats_text = f"Words: {len(document.split())} → {len(response.split())} | Improvement: {orig_grade - simp_grade:.1f} grade levels"
-
-    return response, score_text, stats_text
+    return simplified, score, stats
 
 
-# === EXAMPLES ===
 EXAMPLES = [
     [
         "Dear Patient, Following your recent appointment on 14/03/2026, I am writing to inform you that your blood test results indicate elevated levels of glycated haemoglobin (HbA1c) at 58 mmol/mol, which is above the recommended threshold of 48 mmol/mol for non-diabetic individuals. This finding is consistent with a diagnosis of Type 2 Diabetes Mellitus. I would recommend commencing Metformin 500mg twice daily with meals, and scheduling a follow-up appointment in 3 months for repeat HbA1c monitoring. Please also arrange a retinal screening appointment and annual foot check.",
         "English"
     ],
     [
-        "NOTICE OF DETERMINATION: Having considered your application and supporting documentation, we have determined that you are not eligible for Universal Credit payments at this time. The reason for this decision is that your combined household income of £2,847 per month exceeds the applicable threshold for your household composition (single claimant, no dependents) of £1,248 per month. You have the right to request a Mandatory Reconsideration within one calendar month of the date of this letter.",
-        "English"
-    ],
-    [
-        "SECTION 21 NOTICE: You are hereby given notice that possession of the property at [address] is required after 01/08/2026. This notice is given under section 21(1)(b) of the Housing Act 1988. If you do not leave, court proceedings may be issued. You are advised to seek legal advice. Citizens Advice (citizensadvice.org.uk) or Shelter (shelter.org.uk) can help.",
+        "NOTICE OF DETERMINATION: Having considered your application and supporting documentation, we have determined that you are not eligible for Universal Credit payments at this time. The reason for this decision is that your combined household income of 2,847 per month exceeds the applicable threshold for your household composition (single claimant, no dependents) of 1,248 per month. You have the right to request a Mandatory Reconsideration within one calendar month of the date of this letter.",
         "English"
     ],
     [
@@ -107,21 +84,19 @@ EXAMPLES = [
     ],
 ]
 
-
-# === INTERFACE ===
 with gr.Blocks(
-    title="MedSimplify — Document Accessibility",
+    title="MedSimplify - Document Accessibility",
     theme=gr.themes.Soft(primary_hue="blue"),
 ) as demo:
     gr.HTML("""
     <div style="text-align: center; padding: 20px;">
-        <h1>📄 MedSimplify</h1>
+        <h1>MedSimplify</h1>
         <h3>Making documents accessible for everyone</h3>
         <p>Paste any medical letter, government form, or legal notice.<br>
-        <b>Gemma 4</b> transforms it into Easy Read format — simple words, short sentences, clear actions.</p>
+        AI transforms it into Easy Read format - simple words, short sentences, clear actions.</p>
         <p style="color: #666; font-size: 0.9em;">
-            🔒 Privacy: Can run locally via Ollama — documents never leave your device.<br>
-            🌍 Supports 20+ languages | ♿ Designed for cognitive accessibility
+            Supports 20+ languages | Designed for cognitive accessibility<br>
+            Built with Gemma 4 for the Gemma 4 Good Hackathon
         </p>
     </div>
     """)
@@ -129,49 +104,40 @@ with gr.Blocks(
     with gr.Row(equal_height=True):
         with gr.Column(scale=1):
             input_text = gr.Textbox(
-                label="📄 Paste your document",
-                placeholder="Paste a medical letter, government form, prescription, legal notice, or any complex document here...",
-                lines=12,
-                max_lines=20,
+                label="Paste your document",
+                placeholder="Paste a medical letter, government form, prescription, or any complex document...",
+                lines=10,
             )
             with gr.Row():
                 language = gr.Dropdown(
                     choices=["English", "Spanish", "Hindi", "Arabic", "French",
-                             "Portuguese", "German", "Chinese", "Japanese",
-                             "Korean", "Tamil", "Bengali", "Urdu"],
+                             "Portuguese", "German", "Chinese", "Tamil", "Bengali"],
                     value="English",
-                    label="🌍 Output language",
+                    label="Output language",
                     scale=2,
                 )
-                btn = gr.Button("✨ Simplify", variant="primary", scale=1, size="lg")
+                btn = gr.Button("Simplify", variant="primary", scale=1, size="lg")
 
         with gr.Column(scale=1):
             output_text = gr.Textbox(
-                label="📋 Easy Read Version",
-                lines=12,
-                max_lines=20,
+                label="Easy Read Version",
+                lines=10,
                 show_copy_button=True,
             )
             score = gr.Textbox(label="Readability", interactive=False)
             stats = gr.Textbox(label="Statistics", interactive=False)
 
-    btn.click(fn=simplify, inputs=[input_text, language], outputs=[output_text, score, stats])
-    input_text.submit(fn=simplify, inputs=[input_text, language], outputs=[output_text, score, stats])
+    btn.click(fn=simplify_document, inputs=[input_text, language], outputs=[output_text, score, stats])
 
     gr.Examples(
         examples=EXAMPLES,
         inputs=[input_text, language],
-        outputs=[output_text, score, stats],
-        fn=simplify,
-        cache_examples=False,
-        label="📝 Try these real-world examples:",
+        label="Try these examples:",
     )
 
     gr.HTML("""
-    <div style="text-align: center; margin-top: 30px; padding: 15px; background: #f0f9ff; border-radius: 10px;">
-        <p><b>Built with Gemma 4</b> (fine-tuned with <a href="https://github.com/unslothai/unsloth">Unsloth</a>)
-        for the <a href="https://www.kaggle.com/competitions/gemma-4-good-hackathon">Gemma 4 Good Hackathon</a></p>
-        <p style="color: #666;">Track: Digital Equity & Inclusivity | Special Tech: Unsloth</p>
+    <div style="text-align: center; margin-top: 20px; padding: 10px; background: #f0f9ff; border-radius: 8px;">
+        <p>Built for the <a href="https://www.kaggle.com/competitions/gemma-4-good-hackathon">Gemma 4 Good Hackathon</a> | Track: Digital Equity & Inclusivity</p>
     </div>
     """)
 
