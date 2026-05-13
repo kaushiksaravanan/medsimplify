@@ -5,9 +5,9 @@ import subprocess, sys, os, json, random
 
 # 0. Install Dependencies
 print("Installing dependencies...")
-subprocess.run([sys.executable, "-m", "pip", "install", "-q", "unsloth[colab-new] @ git+https://github.com/unslothai/unsloth.git"], check=False)
-subprocess.run([sys.executable, "-m", "pip", "install", "-q", "--no-deps", "trl", "peft", "accelerate", "bitsandbytes"], check=False)
-subprocess.run([sys.executable, "-m", "pip", "install", "-q", "datasets", "textstat", "huggingface_hub"], check=False)
+subprocess.run([sys.executable, "-m", "pip", "install", "-q",
+    "peft", "trl", "accelerate", "bitsandbytes", "datasets", "textstat", "huggingface_hub", "transformers>=4.40.0"],
+    check=False)
 
 # 1. Data Preparation
 print("\n" + "="*60 + "\nSTEP 1: Data Preparation\n" + "="*60)
@@ -75,20 +75,40 @@ with open("data/eval.jsonl", "w") as f:
 print(f"Saved: {len(train_data)} train, {len(eval_data)} eval")
 
 # 2. Fine-tuning
-print("\n" + "="*60 + "\nSTEP 2: Fine-tuning\n" + "="*60)
-from unsloth import FastLanguageModel
+print("\n" + "="*60 + "\nSTEP 2: Fine-tuning (Standard PEFT - P100 compatible)\n" + "="*60)
+from transformers import AutoModelForCausalLM, AutoTokenizer, BitsAndBytesConfig, TrainingArguments
+from peft import LoraConfig, get_peft_model, prepare_model_for_kbit_training
+from trl import SFTTrainer
 import torch
 
 MODEL_NAME = "google/gemma-2-2b-it"
-MAX_SEQ_LENGTH = 2048
+MAX_SEQ_LENGTH = 1024
+
+quantization_config = BitsAndBytesConfig(
+    load_in_4bit=True,
+    bnb_4bit_compute_dtype=torch.float16,
+    bnb_4bit_quant_type="nf4",
+    bnb_4bit_use_double_quant=True,
+)
 
 print(f"Loading {MODEL_NAME}...")
-model, tokenizer = FastLanguageModel.from_pretrained(model_name=MODEL_NAME, max_seq_length=MAX_SEQ_LENGTH, load_in_4bit=True, dtype=None)
+tokenizer = AutoTokenizer.from_pretrained(MODEL_NAME)
+model = AutoModelForCausalLM.from_pretrained(
+    MODEL_NAME,
+    quantization_config=quantization_config,
+    device_map="auto",
+    torch_dtype=torch.float16,
+)
+model = prepare_model_for_kbit_training(model)
 print("Model loaded!")
 
-model = FastLanguageModel.get_peft_model(model, r=16, lora_alpha=16, lora_dropout=0,
+lora_config = LoraConfig(
+    r=16, lora_alpha=32, lora_dropout=0.05,
     target_modules=["q_proj","k_proj","v_proj","o_proj","gate_proj","up_proj","down_proj"],
-    bias="none", use_gradient_checkpointing="unsloth", random_state=42)
+    bias="none", task_type="CAUSAL_LM",
+)
+model = get_peft_model(model, lora_config)
+model.print_trainable_parameters()
 
 TMPL = "<start_of_turn>user\n{instruction}\n\nDocument:\n{input}<end_of_turn>\n<start_of_turn>model\n{output}<end_of_turn>"
 def fmt(ex):
@@ -98,13 +118,10 @@ dataset = load_dataset("json", data_files="data/train.jsonl", split="train")
 dataset = dataset.map(fmt, batched=True, remove_columns=dataset.column_names)
 print(f"Training on {len(dataset)} examples")
 
-from trl import SFTTrainer
-from transformers import TrainingArguments
-
 trainer = SFTTrainer(model=model, tokenizer=tokenizer, train_dataset=dataset, dataset_text_field="text", max_seq_length=MAX_SEQ_LENGTH,
     args=TrainingArguments(output_dir="outputs", per_device_train_batch_size=2, gradient_accumulation_steps=4,
         warmup_steps=10, num_train_epochs=3, learning_rate=2e-4,
-        fp16=not torch.cuda.is_bf16_supported(), bf16=torch.cuda.is_bf16_supported(),
+        fp16=True,
         logging_steps=25, optim="adamw_8bit", weight_decay=0.01, lr_scheduler_type="linear",
         seed=42, save_strategy="epoch", save_total_limit=2))
 
@@ -121,7 +138,7 @@ TEST = [
     "Your child needs immunisation at school on 22/04/2026. Return consent form by 15/04/2026.",
 ]
 
-FastLanguageModel.for_inference(model)
+model.eval()
 for i, doc in enumerate(TEST):
     prompt = "<start_of_turn>user\nTransform into Easy Read format. Short sentences, markers, action checklist.\n\nDocument:\n" + doc + "<end_of_turn>\n<start_of_turn>model\n"
     inputs = tokenizer(prompt, return_tensors="pt").to(model.device)
@@ -135,13 +152,7 @@ for i, doc in enumerate(TEST):
 print("\n" + "="*60 + "\nSTEP 4: Save and Push\n" + "="*60)
 model.save_pretrained("medsimplify-gemma4")
 tokenizer.save_pretrained("medsimplify-gemma4")
-print("Model saved locally!")
-
-try:
-    model.save_pretrained_gguf("medsimplify-gguf", tokenizer, quantization_method="q4_k_m")
-    print("GGUF exported!")
-except Exception as e:
-    print(f"GGUF export: {e}")
+print("Model saved locally! (Use llama.cpp convert.py for GGUF export)")
 
 HF_TOKEN = os.environ.get("HF_TOKEN", "")
 
